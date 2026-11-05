@@ -4,7 +4,7 @@ repo: https://github.com/okyssta/hermes-house-rules
 # Pinned commit SHA is added by the release job once the public repo and the
 # v1.0.0 tag exist. Catalog admission rejects an unpinned entry, so this line
 # is intentionally left commented rather than guessed:
-# sha: <40-character commit sha of the v1.0.0 tag>
+sha: cdbf848455d3f6806fe27da162086cc18d3722c9
 description: >-
   The corrections you keep repeating become policy. house_rules stores explicit,
   user-owned rules ("use uv, not pip", "never push to main", "don't touch prod",
