@@ -1,0 +1,85 @@
+name: house_rules
+label: House Rules
+version: "1.0.0"
+manifest_version: 2
+api_version: 1
+license: MIT
+homepage: https://github.com/okyssta/hermes-house-rules
+author: kyssta
+requires_hermes: ">=0.22.0"
+description: >
+  The corrections you keep repeating become policy. house_rules stores explicit,
+  user-owned rules ("use uv, not pip", "never push to main", "don't touch prod",
+  "ask before deleting") and evaluates every tool call against them in the public
+  pre_tool_call hook before anything runs: block returns a message that names the
+  rule, quotes the matched text and says how to change it; approve escalates the
+  call to the human approval gate; warn records a hit and lets it through. Rules
+  are Python regular expressions matched with re.search against the command, path
+  or URL text of the call, scoped either globally or to a project (nearest git
+  root, stored in .hermes/rules.json so it travels with the repo), ordered project
+  first then newest, and each carries a stable id, a human explanation and a hit
+  counter with the last 200 firings. Four tools — rule_add, rule_list,
+  rule_remove, rule_test — plus /rules let the agent and the user teach, inspect,
+  retire and dry-run a rule without running anything. The bundled skill turns
+  "always/never/from now on" into a precise regex at the moment the user says it.
+  Everything is local: no network calls, no credentials, standard library only.
+  Disclosure — writes only <hermes_home>/plugin-data/house_rules/rules.json,
+  hits.json and, when a rule is added with scope=project, the project's own
+  .hermes/rules.json (atomically, after copying the previous file to
+  rules.json.bak); reads the project's .hermes/rules.json when present and never
+  executes it as code — patterns are compiled as regexes only, capped at 500
+  characters, and matched against at most 8000 characters of argument text per
+  call; records the matched substring (never the whole command) for the last 200
+  firings; makes no network calls, reads no environment secrets, registers no
+  core overrides, and does nothing at all when enabled is false.
+tags: [policy, guardrails, rules, safety, workflow, terminal, local]
+provides_tools:
+  - rule_add
+  - rule_list
+  - rule_remove
+  - rule_test
+provides_hooks:
+  - pre_tool_call
+config_schema:
+  enabled:
+    type: bool
+    default: true
+    label: Enabled
+    description: Evaluate rules before every tool call. Off means the tools and /rules still work, nothing is enforced.
+  default_action:
+    type: str
+    default: "block"
+    label: Default action
+    description: >-
+      Action for a rule that does not carry its own (hand-written entries in
+      .hermes/rules.json). One of block, approve, warn.
+  warn_blocks:
+    type: bool
+    default: false
+    label: Warn rules block
+    description: >-
+      When on, a rule whose action is warn stops the call instead of only
+      recording a hit. Use it to tighten every warning at once without editing
+      each rule.
+  max_rules:
+    type: int
+    default: 200
+    label: Max rules per file
+    description: >-
+      Refuse new rules beyond this many in one scope (1-1000). A policy file that
+      grows without bound is slow to read and impossible to reason about.
+  log_hits:
+    type: bool
+    default: true
+    label: Keep a hit log
+    description: >-
+      Keep the last 200 firings (time, rule, tool, matched text, action) under
+      plugin-data/house_rules/hits.json. Counters are kept either way.
+  project_file_enabled:
+    type: bool
+    default: true
+    label: Read project rule files
+    description: >-
+      Read <project>/.hermes/rules.json from the nearest git root. Turn off to
+      ignore rules that arrive with a repository and only follow your own
+      global rules.

@@ -1,0 +1,46 @@
+name: house_rules
+title: House Rules — your corrections, enforced
+repo: https://github.com/okyssta/hermes-house-rules
+# Pinned commit SHA is added by the release job once the public repo and the
+# v1.0.0 tag exist. Catalog admission rejects an unpinned entry, so this line
+# is intentionally left commented rather than guessed:
+# sha: <40-character commit sha of the v1.0.0 tag>
+description: >-
+  The corrections you keep repeating become policy. house_rules stores explicit,
+  user-owned rules ("use uv, not pip", "never push to main", "don't touch prod",
+  "ask before deleting") and evaluates every tool call against them in the public
+  pre_tool_call hook before anything runs: block returns a message naming the rule,
+  quoting the matched text and saying how to change it; approve escalates the call
+  to the human approval gate; warn records a hit and lets it through. Rules are
+  Python regular expressions matched with re.search against the command, path or
+  URL text of the call, scoped globally or to a project (nearest git root, stored
+  in .hermes/rules.json so it travels with the repo), ordered project first then
+  newest, each with a stable id, a human explanation and a hit counter plus the
+  last 200 firings. Four tools — rule_add, rule_list, rule_remove, rule_test — and
+  a /rules command let the agent and the user teach, inspect, retire and dry-run a
+  rule without running anything; a bundled skill turns "always/never/from now on"
+  into a precise regex at the moment the user says it. Local and stdlib-only.
+  Disclosure — writes <hermes_home>/plugin-data/house_rules/{rules,hits}.json and,
+  when a rule is added with scope=project, the project's .hermes/rules.json
+  (atomically, after copying the previous file to rules.json.bak); reads the
+  project's .hermes/rules.json when present and compiles patterns as regexes only,
+  capped at 500 characters, against at most 8000 characters of argument text per
+  call; stores the matched substring, never the whole command, for the last 200
+  firings; no network calls, no credentials, no core overrides.
+maintainer: okyssta
+tier: community
+category: tools
+requires_hermes: ">=0.22.0"
+version: "1.0.0"
+docs_url: https://github.com/okyssta/hermes-house-rules#readme
+platforms: []
+capabilities:
+  provides_tools:
+    - rule_add
+    - rule_list
+    - rule_remove
+    - rule_test
+  provides_hooks:
+    - pre_tool_call
+  provides_middleware: []
+  requires_env: []
